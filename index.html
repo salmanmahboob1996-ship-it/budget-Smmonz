@@ -191,7 +191,7 @@
     <div id="hist" class="hide">
       <div id="histBody"></div>
       <h2 style="margin-top:18px">Your JSON file</h2>
-      <div class="note">On iPhone this opens the share sheet — choose <b>Save to Files</b> and pick the same folder each time to keep one <b>budget.json</b> up to date.</div>
+      <div class="note">On iPhone this opens the share sheet — choose <b>Save to Files</b>. iPhone never overwrites: if <b>budget.json</b> is already in the folder it saves the new one as "budget 2". Either delete the old file first, or don't worry about names — every save is time-stamped inside, the app reads any name, and loading tells you when that copy was saved.</div>
       <div class="row">
         <button class="pri" onclick="saveToFile()">Save to my file</button>
         <label style="padding:8px 14px;font-size:13px;font-weight:600;border:1px solid var(--bd);border-radius:8px;background:var(--page);color:var(--tx);cursor:pointer">
@@ -627,7 +627,7 @@ function renderHistory(){
 
 /* ---------- the JSON file ---------- */
 function fileName(dated){ return dated ? 'budget-'+todayISO()+'.json' : 'budget.json'; }
-function json(){ return JSON.stringify(DB,null,2); }
+function json(){ DB.saved=stamp(); save(); return JSON.stringify(DB,null,2); }
 
 /* iPhone Safari cannot write to disk on its own, so hand the file to the
    share sheet ("Save to Files"); every other browser just downloads it. */
@@ -665,7 +665,7 @@ function importData(inp){
     try{ adopt(raw); }catch(e){ alert('That file could not be read.'); return; }
     VIEW=null; EDIT=null;
     save(); META.savedRev=META.rev; save();   /* just loaded it, so it matches */
-    refresh(); alert('Loaded from your file.');
+    refresh(); alert('Loaded. This copy was saved '+(DB.saved||'before save-stamps existed')+'.');
   };
   r.onerror=function(){ alert('That file could not be read.'); };
   r.readAsText(f);
