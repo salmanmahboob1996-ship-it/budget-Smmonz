@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Salman — Budget</title>
+<title>Budget</title>
 <style>
   :root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--tx:#0b0b0b;--tx2:#52514e;--muted:#898781;
     --grid:#e1e0d9;--bd:rgba(11,11,11,.10);--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;
@@ -78,6 +78,9 @@
   button.pri{background:var(--s1);color:#fff;border-color:transparent}
   button.danger{color:var(--crit)}
   button:hover{opacity:.85}
+  .empty{padding:18px 2px 4px;font-size:13.5px;color:var(--tx2)}
+  .empty b{color:var(--tx);font-size:14.5px}
+  .empty>div{margin-top:4px}
   .sn{font-size:11.5px;color:var(--muted);margin-top:10px}
   .hide{display:none}
   table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
@@ -93,7 +96,7 @@
 <body>
 <div class="wrap">
 
-  <div class="kicker">Salman · personal budget</div>
+  <div class="kicker">Personal budget</div>
   <h1 id="cycleTitle">Cycle</h1>
   <div class="sub" id="cycleSub"></div>
   <div class="nav">
@@ -195,7 +198,7 @@
           Load from my file<input type="file" accept=".json,application/json" style="display:none" onchange="importData(this)">
         </label>
         <button onclick="exportData(true)">Dated copy</button>
-        <button class="danger" onclick="if(confirm('Erase everything and start fresh?')){localStorage.removeItem(KEY);location.reload()}">Reset all</button>
+        <button class="danger" onclick="resetAll()">Reset all</button>
       </div>
       <div class="sn" id="saveState"></div>
       <div class="sn">Nothing is ever sent anywhere — the app has no server and makes no network calls. The file is the only copy that survives clearing Safari data or changing phone.</div>
@@ -206,40 +209,16 @@
 </div>
 
 <script>
-var KEY='salman_budget_v1';
-var MKEY='salman_budget_v1_meta';
+var KEY='budget_v1';
+var MKEY='budget_v1_meta';
+var OLDKEYS=['salman_budget_v1','salman_budget_v1_meta'];   /* data saved before the rename */
 
-/* ---------- the recurring list: names and due days only ----------
-   Every amount here is 0 on purpose — this repository is public, so the real
-   figures live only in your own budget.json and in this browser. */
+/* ---------- nothing ships with the app ----------
+   No names, no dates, no amounts. A new user builds their own list in Setup;
+   an existing one gets everything back from their JSON file. */
 var DEFAULT={
   cfg:{salary:0, loan:0, startDay:28, personal:0, buffer:0},
-  tpl:[
-    {n:"France credit (D360)", g:"Debt", d:28, v:0, a:"monthly", end:"2027-03"},
-    {n:"PS5 Pro — Tabby", g:"Debt", d:29, v:0, a:"monthly", end:"2026-10"},
-    {n:"Gym — Tabby", g:"Debt", d:2, v:0, a:"monthly", end:"2026-10"},
-    {n:"My wife", g:"Home", d:28, v:0, a:"monthly", end:""},
-    {n:"Home rent (Ejar)", g:"Home", d:27, v:0, a:"monthly", end:""},
-    {n:"STC", g:"Connectivity", d:28, v:0, a:"monthly", end:""},
-    {n:"WiFi", g:"Connectivity", d:1, v:0, a:"monthly", end:""},
-    {n:"Mobily", g:"Connectivity", d:1, v:0, a:"monthly", end:""},
-    {n:"Claude", g:"Subscriptions", d:4, v:0, a:"monthly", end:""},
-    {n:"iCloud 2TB", g:"Subscriptions", d:8, v:0, a:"monthly", end:""},
-    {n:"PSN", g:"Subscriptions", d:9, v:0, a:"monthly", end:""},
-    {n:"Spotify", g:"Subscriptions", d:22, v:0, a:"monthly", end:""},
-    {n:"Apple", g:"Subscriptions", d:26, v:0, a:"monthly", end:""},
-    {n:"Fuel 1", g:"Car", d:6, v:0, a:"monthly", end:""},
-    {n:"Fuel 2", g:"Car", d:20, v:0, a:"monthly", end:""},
-    {n:"Car wash 1", g:"Car", d:1, v:0, a:"monthly", end:""},
-    {n:"Car wash 2", g:"Car", d:8, v:0, a:"monthly", end:""},
-    {n:"Car wash 3", g:"Car", d:15, v:0, a:"monthly", end:""},
-    {n:"Car wash 4", g:"Car", d:22, v:0, a:"monthly", end:""},
-    {n:"Haircut", g:"Personal", d:15, v:0, a:"monthly", end:""},
-    {n:"Week 1 — groceries", g:"Weekly account", d:28, v:0, a:"weekly", end:""},
-    {n:"Week 2 — groceries", g:"Weekly account", d:4, v:0, a:"weekly", end:""},
-    {n:"Week 3 — groceries", g:"Weekly account", d:11, v:0, a:"weekly", end:""},
-    {n:"Week 4 — groceries", g:"Weekly account", d:18, v:0, a:"weekly", end:""}
-  ],
+  tpl:[],
   cycles:{}
 };
 
@@ -255,8 +234,12 @@ function adopt(raw){
   return DB;
 }
 
-function load(){ try{ var r=localStorage.getItem(KEY); if(r) return JSON.parse(r); }catch(e){} return JSON.parse(JSON.stringify(DEFAULT)); }
-function loadMeta(){ try{ var r=localStorage.getItem(MKEY); if(r) return JSON.parse(r); }catch(e){} return {rev:0,savedRev:0,savedAt:''}; }
+function read(key,fallback){
+  try{ var r=localStorage.getItem(key); if(r) return JSON.parse(r); }catch(e){}
+  return null;
+}
+function load(){ return read(KEY) || read(OLDKEYS[0]) || JSON.parse(JSON.stringify(DEFAULT)); }
+function loadMeta(){ return read(MKEY) || read(OLDKEYS[1]) || {rev:0,savedRev:0,savedAt:''}; }
 var META=loadMeta(), LAST='';
 
 /* only a real change to the data counts as a change — redraws must not nag */
@@ -432,7 +415,9 @@ function render(){
 
   /* grouped list */
   var host=document.getElementById('list'); host.innerHTML='';
-  if(!lines.length) host.innerHTML='<div class="sn">Nothing in this cycle yet. Load your JSON file below, or add your recurring lines under Setup.</div>';
+  if(!lines.length) host.innerHTML='<div class="empty"><b>Nothing here yet.</b><div>Either build your list of regular payments, or bring back a JSON file you saved earlier.</div>'+
+    '<div class="row"><button class="pri" onclick="openSetup()">Set up my payments</button>'+
+    '<button onclick="openHistory()">Restore from a file</button></div></div>';
   var groups={}; lines.forEach(function(l){ (groups[l.g]=groups[l.g]||[]).push(l); });
   var order=['Debt','Home','Connectivity','Subscriptions','Car','Personal','Weekly account','Extras'];
   Object.keys(groups).forEach(function(g){ if(order.indexOf(g)<0) order.push(g); });
@@ -686,6 +671,14 @@ function importData(inp){
   r.readAsText(f);
   inp.value='';                                /* let the same file be picked again */
 }
+/* an empty app has nothing worth nagging about */
+function hasData(){
+  if(DB.tpl.length) return true;
+  return Object.keys(DB.cycles).some(function(k){
+    var C=DB.cycles[k];
+    return C.lines.length || (C.bal && (C.bal.main||C.bal.weekly||C.bal.monthly||C.bal.out));
+  });
+}
 function renderSaveState(){
   var n=pending(), st=document.getElementById('saveState'), bar=document.getElementById('saveBar');
   if(!st||!bar) return;
@@ -693,13 +686,25 @@ function renderSaveState(){
     ? (n ? n+' change'+(n===1?'':'s')+' since you saved to your file · last saved '+META.savedAt
          : 'Your file is up to date · saved '+META.savedAt)
     : 'Not saved to a file yet.';
-  var nag = n>=12 || (n>0 && !META.savedAt);
+  var nag = hasData() && (n>=12 || (n>0 && !META.savedAt));
   bar.classList.toggle('hide',!nag);
   if(nag) bar.innerHTML='<span style="flex:1;min-width:150px">'+n+' change'+(n===1?'':'s')+
     ' live only in this browser.</span><button class="pri" onclick="saveToFile()">Save to my file</button>';
 }
 
 function toggle(id){ document.getElementById(id).classList.toggle('hide'); }
+function reveal(id){
+  var el=document.getElementById(id);
+  el.classList.remove('hide');
+  el.scrollIntoView({block:'start'});
+}
+function openSetup(){ reveal('setup'); if(!DB.tpl.length){ addLine(); } }
+function openHistory(){ reveal('hist'); }
+function resetAll(){
+  if(!confirm('Erase everything and start fresh? Your saved JSON file is not touched.')) return;
+  try{ [KEY,MKEY].concat(OLDKEYS).forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+  location.reload();
+}
 function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
 
