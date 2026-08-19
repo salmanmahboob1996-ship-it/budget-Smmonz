@@ -502,23 +502,21 @@ function editRow(C,l){
 }
 
 function acctNote(lines,C){
-  var due={main:0,weekly:0,monthly:0}, spentExtra={main:0,weekly:0,monthly:0}, total=0;
+  var due={main:0,weekly:0,monthly:0}, total=0, paidSum=0;
   lines.forEach(function(l){
     total+=+l.v;
-    if(!PAID[l.id]){ due[l.a]=(due[l.a]||0)+ +l.v; }
-    else if(l.src==='x'){ spentExtra[l.a]=(spentExtra[l.a]||0)+ +l.v; }   /* extras already spent */
+    if(!PAID[l.id]){ due[l.a]=(due[l.a]||0)+ +l.v; } else { paidSum+=+l.v; }
   });
   var personal=+(C.cfg.personal||0), buffer=+(C.cfg.buffer||0);
-  var mainTarget    = personal + buffer + due.main - spentExtra.main;
-  var weeklyTarget  = due.weekly  - spentExtra.weekly;
-  var monthlyTarget = due.monthly - spentExtra.monthly;
+  var mainTarget    = personal + buffer + due.main;
+  var weeklyTarget  = due.weekly;
+  var monthlyTarget = due.monthly;
   var outFixed=(C.cfg.savings!==''&&C.cfg.savings!=null);
   var outTarget = outFixed ? +C.cfg.savings : (C.cfg.salary-C.cfg.loan) - total - (personal+buffer);
-  if(mainTarget<0) mainTarget=0; if(weeklyTarget<0) weeklyTarget=0;
-  if(monthlyTarget<0) monthlyTarget=0; if(outTarget<0) outTarget=0;
+  if(outTarget<0) outTarget=0;
 
   set('adMain', mainTarget, C.bal.main,
-      'Personal '+fmt(personal)+' + buffer '+fmt(buffer)+(due.main?' + '+fmt(due.main)+' due':'')+(spentExtra.main?' − '+fmt(spentExtra.main)+' spent':''));
+      'Personal '+fmt(personal)+' + buffer '+fmt(buffer)+(due.main?' + '+fmt(due.main)+' due':''));
   set('adWeek', weeklyTarget, C.bal.weekly, 'Groceries left to spend');
   set('adMonth',monthlyTarget,C.bal.monthly,'Bills left to pay');
   set('adOut',  outTarget,    C.bal.out,    outFixed?'Fixed savings target':'Should be transferred out');
@@ -534,24 +532,25 @@ function acctNote(lines,C){
     }
     el.innerHTML=h;
   }
-  document.getElementById('acctNote').innerHTML='Targets drop as you tick payments and add expenses.';
+  document.getElementById('acctNote').innerHTML='Targets drop as you tick payments.';
 
-  /* the check: every riyal of the working salary must be assigned somewhere */
-  var working=C.cfg.salary-C.cfg.loan;
-  var paidSum=0, unpaidSum=0;
-  lines.forEach(function(l){ if(PAID[l.id]) paidSum+=+l.v; else unpaidSum+=+l.v; });
-  var assigned=paidSum+unpaidSum+personal+buffer+outTarget;
-  var hover=working-assigned;
-  var verdict = Math.round(Math.abs(hover))<1
-      ? '<b style="color:var(--good)">fully assigned — the plan fits exactly</b>'
-      : hover>0
-      ? '<b style="color:var(--good)">hovering '+fmt(hover)+'</b> — not assigned anywhere; sits in main and sweeps to savings at cycle end'
-      : '<b style="color:var(--crit)">over-assigned by '+fmt(-hover)+'</b> — this cycle\'s payments don\'t leave room for the full personal + buffer + move-out';
-  document.getElementById('moneyCheck').innerHTML=
-    'Check: paid '+fmt(paidSum)+' + still to pay '+fmt(unpaidSum)+
-    ' + personal '+fmt(personal)+' + buffer '+fmt(buffer)+
-    ' + move out '+fmt(outTarget)+' = <b>'+fmt(assigned)+'</b>'+
-    ' &nbsp;vs&nbsp; working salary <b>'+fmt(working)+'</b><br>'+verdict;
+  /* live check: what the four boxes should hold together right now vs what you typed in them */
+  var shouldHold=mainTarget+weeklyTarget+monthlyTarget+outTarget;
+  var typed=0, anyTyped=false;
+  ['main','weekly','monthly','out'].forEach(function(k){
+    var v=C.bal[k]; if(v!==''&&v!=null){ anyTyped=true; typed+=+v; }
+  });
+  var h='Check: the targets above add up to <b>'+fmt(shouldHold)+'</b>.';
+  if(anyTyped){
+    var diff=Math.round(typed-shouldHold);
+    h+=' Your balances add up to <b>'+fmt(typed)+'</b> → ';
+    if(Math.abs(diff)<1) h+='<b style="color:var(--good)">all money accounted for</b>';
+    else if(diff>0) h+='<b style="color:var(--good)">+'+fmt(diff)+' more than needed</b>';
+    else h+='<b style="color:var(--crit)">'+fmt(-diff)+' missing</b> — money left the accounts outside the plan';
+  }else{
+    h+=' Type your real balances above to compare.';
+  }
+  document.getElementById('moneyCheck').innerHTML=h;
 }
 
 function addExtra(){
