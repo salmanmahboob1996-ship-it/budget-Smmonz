@@ -31,6 +31,12 @@
   .pbar{height:9px;background:var(--chip);border-radius:6px;margin-top:12px;overflow:hidden}
   .pbar>div{height:9px;background:var(--s3);border-radius:6px 0 0 6px;transition:width .2s}
   .pcap{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px}
+  .nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .nav button{padding:5px 11px;font-size:12.5px}
+  .nav .now{margin-left:auto;font-size:11.5px;color:var(--muted)}
+  .unsaved{border:1px solid var(--s4);background:var(--chip);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--tx2);margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .unsaved button{padding:5px 11px;font-size:12.5px}
+  .past{border:1px solid var(--s4);background:var(--chip);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--tx2);margin-top:12px}
   .acct{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   @media(max-width:700px){.acct{grid-template-columns:1fr 1fr}}
   .abox{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;background:var(--page)}
@@ -42,17 +48,28 @@
   .gh{display:flex;justify-content:space-between;align-items:baseline;padding:12px 2px 6px;font-size:11.5px;
     text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:650;border-bottom:1px solid var(--grid)}
   .gh .gt{font-size:12px;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums;color:var(--tx2)}
-  .it{display:grid;grid-template-columns:26px 1fr auto 78px 22px;gap:9px;align-items:center;padding:8px 2px;
+  .it{display:grid;grid-template-columns:26px 1fr auto 78px 30px;gap:9px;align-items:center;padding:8px 2px;
     font-size:13.5px;border-bottom:1px solid var(--grid);cursor:pointer;border-radius:8px}
   .it:hover{background:var(--paid)}
   .it.p{background:var(--paid)} .it.p .nm,.it.p .am{text-decoration:line-through;color:var(--muted)}
   .it .st{text-align:center;font-size:14px;color:var(--muted)} .it.p .st{color:var(--good);font-weight:700}
   .it .nm small{display:block;font-size:11px;color:var(--muted)}
   .it .am{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
-  .it .x{color:var(--muted);font-size:14px;text-align:center;opacity:0}
-  .it:hover .x{opacity:.7}
+  .it .ed{color:var(--muted);font-size:15px;text-align:center;opacity:.55;padding:4px 0}
+  .it:hover .ed{opacity:1}
+  @media(max-width:520px){
+    .it{grid-template-columns:22px 1fr 74px 30px;grid-template-areas:"st nm am ed" "st chip am ed";column-gap:7px;row-gap:1px}
+    .it .st{grid-area:st}.it .nm{grid-area:nm}.it .am{grid-area:am}.it .ed{grid-area:ed}
+    .it .chip{grid-area:chip;justify-self:start}
+  }
   .chip{font-size:10.5px;font-weight:600;color:var(--tx2);background:var(--chip);border-radius:20px;padding:2px 8px;white-space:nowrap;justify-self:end}
+  .chip.ch{background:transparent;border:1px dashed var(--s4);color:var(--s4)}
   .it.gold{border-left:3px solid var(--s3);padding-left:5px}
+  .edit{background:var(--paid);border:1px solid var(--bd);border-radius:10px;padding:10px 11px;margin:2px 0 8px}
+  .edit .er{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .edit .er+.er{margin-top:7px}
+  .edit label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+  .edit input,.edit select{font-size:13px}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
   input[type=text],input[type=number],select{padding:8px 10px;font-size:13.5px;border:1px solid var(--bd);
     border-radius:8px;background:var(--page);color:var(--tx);outline:none}
@@ -68,6 +85,7 @@
   td{padding:5px 4px;border-bottom:1px solid var(--grid)}
   td input{width:100%;font-size:13px;padding:5px 7px}
   td.n input{text-align:right;font-variant-numeric:tabular-nums}
+  tr.hrow{cursor:pointer} tr.hrow:hover td{background:var(--paid)}
   .warn{color:var(--crit);font-weight:600}
   footer{font-size:11px;color:var(--muted);margin-top:20px;text-align:center}
 </style>
@@ -78,7 +96,22 @@
   <div class="kicker">Salman · personal budget</div>
   <h1 id="cycleTitle">Cycle</h1>
   <div class="sub" id="cycleSub"></div>
+  <div class="nav">
+    <button onclick="goCycle(-1)">◀ Previous</button>
+    <button onclick="goCycle(1)">Next ▶</button>
+    <button id="btnNow" class="hide" onclick="goNow()">Back to now</button>
+    <span class="now" id="navNote"></span>
+  </div>
+  <div id="pastBar" class="past hide"></div>
+  <div id="saveBar" class="unsaved hide"></div>
 
+  <div id="stub" class="card hide">
+    <h2>No record for this cycle yet</h2>
+    <div class="note">Create it to fill in what you actually paid that month. It starts as a copy of your recurring list and can be edited freely without touching any other cycle.</div>
+    <button class="pri" onclick="createViewed()">Create this cycle</button>
+  </div>
+
+  <div id="main">
   <div class="card">
     <div class="grid3">
       <div class="tile" id="tPaid"><div class="l">Paid so far</div><div class="v" id="vPaid">0</div><div class="c" id="cPaid"></div></div>
@@ -103,9 +136,9 @@
 
   <div class="card">
     <h2>Payments</h2>
-    <div class="note">Tap a line to mark it paid. Lines auto-tick on their due date. Tap ✕ to remove a one-off.</div>
+    <div class="note">Tap a line to mark it paid. Tap ✎ to change or delete it in this cycle only. Lines auto-tick on their due date.</div>
     <div id="list"></div>
-    <div class="row">
+    <div class="row" id="addRow">
       <input type="text" id="exName" placeholder="Extra expense (e.g. speeding fine)" style="flex:1;min-width:180px">
       <input type="number" id="exAmt" placeholder="Amount" style="width:110px">
       <select id="exAcct"><option value="main">Main</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select>
@@ -114,9 +147,26 @@
   </div>
 
   <div class="card">
+    <h2>This cycle's salary <button style="float:right" onclick="toggle('cycfg')">show / hide</button></h2>
+    <div id="cycfg" class="hide">
+      <div class="note">Saved with this cycle. Change it here if a month was different — older cycles keep their own numbers.</div>
+      <div class="row">
+        <label style="font-size:13px">Salary <input type="number" id="ccSalary" style="width:110px"></label>
+        <label style="font-size:13px">Big credit (auto) <input type="number" id="ccLoan" style="width:110px"></label>
+        <label style="font-size:13px">Personal <input type="number" id="ccPersonal" style="width:90px"></label>
+        <label style="font-size:13px">Buffer <input type="number" id="ccBuffer" style="width:90px"></label>
+        <button class="pri" onclick="saveCycleCfg()">Save</button>
+        <button id="ccReset" class="hide" onclick="resetCycleCfg()">Follow setup again</button>
+      </div>
+      <div class="sn" id="ccNote"></div>
+    </div>
+  </div>
+  </div>
+
+  <div class="card">
     <h2>Setup <button style="float:right" onclick="toggle('setup')">show / hide</button></h2>
     <div id="setup" class="hide">
-      <div class="note">Salary and the auto-deducted big credit. Everything else is the recurring list.</div>
+      <div class="note">Salary and the auto-deducted big credit. Everything else is the recurring list. Changes here apply to the current cycle onwards — finished cycles keep what they had.</div>
       <div class="row">
         <label style="font-size:13px">Salary <input type="number" id="cfgSalary" style="width:110px"></label>
         <label style="font-size:13px">Big credit (auto) <input type="number" id="cfgLoan" style="width:110px"></label>
@@ -137,22 +187,27 @@
     <h2>History &amp; backup <button style="float:right" onclick="toggle('hist')">show / hide</button></h2>
     <div id="hist" class="hide">
       <div id="histBody"></div>
+      <h2 style="margin-top:18px">Your JSON file</h2>
+      <div class="note">On iPhone this opens the share sheet — choose <b>Save to Files</b> and pick the same folder each time to keep one <b>budget.json</b> up to date.</div>
       <div class="row">
-        <button onclick="exportData()">Download backup</button>
-        <label class="pri" style="padding:8px 14px;font-size:13px;font-weight:600;border-radius:8px;background:var(--s1);color:#fff;cursor:pointer">
-          Restore backup<input type="file" accept=".json" style="display:none" onchange="importData(this)">
+        <button class="pri" onclick="saveToFile()">Save to my file</button>
+        <label style="padding:8px 14px;font-size:13px;font-weight:600;border:1px solid var(--bd);border-radius:8px;background:var(--page);color:var(--tx);cursor:pointer">
+          Load from my file<input type="file" accept=".json,application/json" style="display:none" onchange="importData(this)">
         </label>
+        <button onclick="exportData(true)">Dated copy</button>
         <button class="danger" onclick="if(confirm('Erase everything and start fresh?')){localStorage.removeItem(KEY);location.reload()}">Reset all</button>
       </div>
-      <div class="sn">Everything is stored in this browser. Download a backup before clearing browser data or switching phone.</div>
+      <div class="sn" id="saveState"></div>
+      <div class="sn">Nothing is ever sent anywhere — the app has no server and makes no network calls. The file is the only copy that survives clearing Safari data or changing phone.</div>
     </div>
   </div>
 
-  <footer>Opens offline · saves in this browser · new cycle starts automatically each month</footer>
+  <footer>Opens offline · saves in this browser only · new cycle starts automatically each month</footer>
 </div>
 
 <script>
 var KEY='salman_budget_v1';
+var MKEY='salman_budget_v1_meta';
 
 /* ---------- default recurring template ---------- */
 var DEFAULT={
@@ -161,14 +216,83 @@ var DEFAULT={
   cycles:{}
 };
 
-var DB=load();
-function load(){ try{ var r=localStorage.getItem(KEY); if(r) return JSON.parse(r); }catch(e){} return JSON.parse(JSON.stringify(DEFAULT)); }
 var STORE_OK=true;
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(DB)); }catch(e){ STORE_OK=false; } }
+var DB=null;
+adopt(load());
+
+/* make raw data the live DB, rolling back if it cannot be migrated */
+function adopt(raw){
+  var prev=DB;
+  DB=raw;
+  try{ migrate(DB); }catch(e){ DB=prev; throw e; }
+  return DB;
+}
+
+function load(){ try{ var r=localStorage.getItem(KEY); if(r) return JSON.parse(r); }catch(e){} return JSON.parse(JSON.stringify(DEFAULT)); }
+function loadMeta(){ try{ var r=localStorage.getItem(MKEY); if(r) return JSON.parse(r); }catch(e){} return {rev:0,savedRev:0,savedAt:''}; }
+var META=loadMeta(), LAST='';
+
+/* only a real change to the data counts as a change — redraws must not nag */
+function save(){
+  var txt;
+  try{ txt=JSON.stringify(DB); }catch(e){ return; }
+  if(txt!==LAST){
+    LAST=txt; META.rev++;
+    try{ localStorage.setItem(KEY,txt); }catch(e){ STORE_OK=false; }
+  }
+  try{ localStorage.setItem(MKEY,JSON.stringify(META)); }catch(e){ STORE_OK=false; }
+  renderSaveState();
+}
+function pending(){ return Math.max(0,META.rev-META.savedRev); }
+function markSaved(){ META.savedAt=stamp(); META.savedRev=META.rev; save(); }
+function stamp(){
+  var t=new Date();
+  return t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate())+' '+pad(t.getHours())+':'+pad(t.getMinutes());
+}
+
+/* ---------- migration: give lines stable ids, snapshot each cycle ---------- */
+function migrate(db){
+  if(!db.cfg) db.cfg=JSON.parse(JSON.stringify(DEFAULT.cfg));
+  if(!db.tpl) db.tpl=[];
+  if(!db.cycles) db.cycles={};
+  db.seq=+db.seq||0;
+
+  /* every template row gets an id that survives reordering and deletion */
+  var used={};
+  db.tpl.forEach(function(t){ if(t.id) used[t.id]=1; });
+  db.tpl.forEach(function(t){
+    if(t.id) return;
+    var id; do{ id='t'+(++db.seq); }while(used[id]);
+    used[id]=1; t.id=id;
+  });
+
+  Object.keys(db.cycles).forEach(function(key){
+    var C=db.cycles[key];
+    if(!C.paid) C.paid={};
+    if(!C.bal) C.bal={main:'',weekly:'',monthly:'',out:''};
+    if(!C.gone) C.gone={};
+    if(!C.cfg) C.cfg=cfgCopy(db.cfg);
+    if(C.lines) return;
+    /* old format: lines were derived on the fly, paid keys were t<index> / e<index> */
+    C.lines=[];
+    db.tpl.forEach(function(t,i){
+      if(t.end && key>t.end) return;
+      C.lines.push({id:'t'+i, tid:t.id, n:t.n, g:t.g, d:t.d, v:+t.v, a:t.a, date:dateIn(t.d,key,db.cfg.startDay), src:'t'});
+    });
+    (C.extras||[]).forEach(function(e,i){
+      C.lines.push({id:'e'+i, n:e.n, g:'Extras', d:dayOf(e.date), v:+e.v, a:e.a, date:e.date, src:'x'});
+    });
+    delete C.extras;
+  });
+  return db;
+}
+function cfgCopy(c){ return {salary:+c.salary||0, loan:+c.loan||0, personal:+c.personal||0, buffer:+c.buffer||0}; }
 
 /* ---------- cycle maths ---------- */
 function pad(n){ return String(n).padStart(2,'0'); }
 function todayISO(){ var t=new Date(); return t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate()); }
+function dayOf(iso){ return +String(iso).split('-')[2]||1; }
+function daysIn(y,m){ return new Date(y,m,0).getDate(); }
 function cycleOf(dateStr){
   var p=dateStr.split('-').map(Number), y=p[0], m=p[1], d=p[2], s=DB.cfg.startDay;
   if(d < s){ m--; if(m<1){ m=12; y--; } }
@@ -179,64 +303,101 @@ function cycleDates(key){
   var em=m+1, ey=y; if(em>12){ em=1; ey++; }
   return { start:y+'-'+pad(m)+'-'+pad(s), end:ey+'-'+pad(em)+'-'+pad(s-1), y:y, m:m, ey:ey, em:em };
 }
+function shiftKey(key,step){
+  var p=key.split('-').map(Number), y=p[0], m=p[1]+step;
+  while(m>12){ m-=12; y++; } while(m<1){ m+=12; y--; }
+  return y+'-'+pad(m);
+}
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function human(iso){ var p=iso.split('-').map(Number); return p[2]+' '+MON[p[1]-1]; }
 
-/* a template line's real date inside a cycle: day >= startDay → first month, else next month */
-function lineDate(line,key){
-  var c=cycleDates(key), s=DB.cfg.startDay;
-  if(line.d>=s) return c.y+'-'+pad(c.m)+'-'+pad(line.d);
-  return c.ey+'-'+pad(c.em)+'-'+pad(line.d);
+/* a line's real date inside a cycle: day >= startDay → first month, else next month */
+function dateIn(day,key,startDay){
+  var s=startDay===undefined?DB.cfg.startDay:startDay, c=cycleDates(key);
+  var y=day>=s?c.y:c.ey, m=day>=s?c.m:c.em;
+  return y+'-'+pad(m)+'-'+pad(Math.min(Math.max(1,day),daysIn(y,m)));
 }
 function lineActive(line,key){
   if(!line.end) return true;
   return key <= line.end;         /* string compare works on YYYY-MM */
 }
 
-function ensureCycle(key){
-  if(!DB.cycles[key]){
-    DB.cycles[key]={ paid:{}, extras:[], bal:{main:'',weekly:'',monthly:'',out:''}, closed:false };
-    save();
-  }
-  return DB.cycles[key];
+function newCycle(key){
+  var C={ cfg:cfgCopy(DB.cfg), lines:[], paid:{}, gone:{}, bal:{main:'',weekly:'',monthly:'',out:''} };
+  DB.tpl.forEach(function(t){
+    if(!lineActive(t,key)) return;
+    C.lines.push({id:'L'+(++DB.seq), tid:t.id, n:t.n, g:t.g, d:+t.d, v:+t.v, a:t.a, date:dateIn(t.d,key), src:'t'});
+  });
+  DB.cycles[key]=C; save();
+  return C;
+}
+function ensureCycle(key){ return DB.cycles[key] || newCycle(key); }
+
+/* the live cycle tracks the setup table; edited lines and past cycles are left alone */
+function syncCurrent(key){
+  var C=DB.cycles[key], seen={};
+  C.lines.forEach(function(l){ if(l.src==='t'&&l.tid) seen[l.tid]=l; });
+  DB.tpl.forEach(function(t){
+    var l=seen[t.id], active=lineActive(t,key);
+    if(l){
+      if(l.edited) return;
+      if(!active){ removeLine(C,l.id); return; }
+      l.n=t.n; l.g=t.g; l.d=+t.d; l.v=+t.v; l.a=t.a; l.date=dateIn(t.d,key);
+    }else if(active && !C.gone[t.id]){
+      C.lines.push({id:'L'+(++DB.seq), tid:t.id, n:t.n, g:t.g, d:+t.d, v:+t.v, a:t.a, date:dateIn(t.d,key), src:'t'});
+    }
+  });
+  if(!C.cfgEdited) C.cfg=cfgCopy(DB.cfg);
+  save();
+}
+function removeLine(C,id){
+  for(var i=0;i<C.lines.length;i++){ if(C.lines[i].id===id){ C.lines.splice(i,1); break; } }
+  delete C.paid[id];              /* paid flags follow the line, never the position */
 }
 
 /* ---------- render ---------- */
-var CUR;
+var CUR, VIEW, EDIT=null, PAID={};
 function render(){
   var today=todayISO();
   CUR=cycleOf(today);
-  var C=ensureCycle(CUR), cd=cycleDates(CUR);
+  ensureCycle(CUR);
+  if(!VIEW || VIEW>CUR) VIEW=CUR;
+  if(VIEW===CUR) syncCurrent(CUR);
 
+  var cd=cycleDates(VIEW), C=DB.cycles[VIEW], live=(VIEW===CUR);
   document.getElementById('cycleTitle').textContent=MON[cd.m-1]+' '+cd.y+' cycle';
+  document.getElementById('btnNow').classList.toggle('hide',live);
+  document.getElementById('navNote').textContent='Today '+human(today);
+  document.getElementById('stub').classList.toggle('hide',!!C);
+  document.getElementById('main').classList.toggle('hide',!C);
+
+  var bar=document.getElementById('pastBar');
+  bar.classList.toggle('hide',live);
+  if(!live) bar.innerHTML='Viewing a finished cycle. Anything you change here — amounts, ticks, salary — stays in this cycle only.';
+
+  if(!C){
+    document.getElementById('cycleSub').textContent=human(cd.start)+' → '+human(cd.end);
+    renderHistory(); return;
+  }
+
   document.getElementById('cycleSub').innerHTML=human(cd.start)+' → '+human(cd.end)+
-    ' · working salary <b>'+fmt(DB.cfg.salary-DB.cfg.loan)+'</b> (salary '+fmt(DB.cfg.salary)+' − big credit '+fmt(DB.cfg.loan)+', auto-deducted)';
-  document.getElementById('today').textContent='Today '+human(today);
+    ' · working salary <b>'+fmt(C.cfg.salary-C.cfg.loan)+'</b> (salary '+fmt(C.cfg.salary)+' − big credit '+fmt(C.cfg.loan)+', auto-deducted)';
+  document.getElementById('today').textContent=live?('Today '+human(today)):(MON[cd.m-1]+' '+cd.y);
 
-  /* build the line list for this cycle */
-  var lines=[];
-  DB.tpl.forEach(function(t,i){
-    if(!lineActive(t,CUR)) return;
-    lines.push({id:'t'+i, n:t.n, g:t.g, v:+t.v, a:t.a, date:lineDate(t,CUR), tpl:true});
-  });
-  C.extras.forEach(function(e,i){
-    lines.push({id:'e'+i, n:e.n, g:'Extras', v:+e.v, a:e.a, date:e.date, tpl:false, idx:i});
-  });
-  lines.sort(function(x,y){ return x.date<y.date?-1:1; });
-
+  var lines=C.lines.slice().sort(function(x,y){ return x.date<y.date?-1:(x.date>y.date?1:0); });
   var total=0,paid=0,cnt=0;
+  PAID={};
   lines.forEach(function(l){
-    total+=l.v;
+    total+=+l.v;
     var st=C.paid[l.id];
-    l.paid = (st===undefined) ? (today>=l.date) : !!st;
-    if(l.paid){ paid+=l.v; cnt++; }
+    PAID[l.id] = (st===undefined) ? (today>=l.date) : !!st;
+    if(PAID[l.id]){ paid+=+l.v; cnt++; }
   });
 
   document.getElementById('vPaid').textContent=fmt(paid);
   document.getElementById('cPaid').textContent=cnt+' of '+lines.length+' lines';
   document.getElementById('vLeft').textContent=fmt(total-paid);
-  var free=(DB.cfg.salary-DB.cfg.loan)-total;
-  document.getElementById('vFree').textContent=fmt(free);
+  document.getElementById('vFree').textContent=fmt((C.cfg.salary-C.cfg.loan)-total);
   document.getElementById('cFree').textContent='working salary − commitments';
   var pc=total?Math.round(paid/total*100):0;
   document.getElementById('pfill').style.width=pc+'%';
@@ -249,47 +410,88 @@ function render(){
   Object.keys(groups).forEach(function(g){ if(order.indexOf(g)<0) order.push(g); });
   order.forEach(function(g){
     var arr=groups[g]; if(!arr) return;
-    var sum=arr.reduce(function(a,b){return a+b.v},0);
+    var sum=arr.reduce(function(a,b){return a+ +b.v},0);
     var gh=document.createElement('div'); gh.className='gh';
-    gh.innerHTML='<span>'+g+'</span><span class="gt">'+fmt(sum)+'</span>'; host.appendChild(gh);
-    arr.forEach(function(l){
-      var r=document.createElement('div');
-      r.className='it'+(l.paid?' p':'')+(l.a==='weekly'?' gold':'');
-      r.innerHTML='<span class="st">'+(l.paid?'✓':'○')+'</span>'+
-        '<span class="nm">'+esc(l.n)+'<small>'+l.a+' account</small></span>'+
-        '<span class="chip">'+(l.paid?'paid':human(l.date))+'</span>'+
-        '<span class="am">'+fmt(l.v)+'</span>'+
-        '<span class="x">'+(l.tpl?'':'✕')+'</span>';
-      r.onclick=function(ev){
-        if(ev.target.className==='x' && !l.tpl){ C.extras.splice(l.idx,1); save(); render(); return; }
-        C.paid[l.id]=!l.paid; save(); render();
-      };
-      host.appendChild(r);
-    });
+    gh.innerHTML='<span>'+esc(g)+'</span><span class="gt">'+fmt(sum)+'</span>'; host.appendChild(gh);
+    arr.forEach(function(l){ host.appendChild(lineRow(C,l)); if(EDIT===l.id) host.appendChild(editRow(C,l)); });
   });
 
   /* accounts */
-  ['main','weekly','monthly','out'].forEach(function(k){
-    var el=document.getElementById('b'+k.charAt(0).toUpperCase()+k.slice(1).replace('onthly','onth').replace('eekly','eek'));
-    if(el){ el.value=C.bal[k]||''; el.oninput=function(){ C.bal[k]=el.value; save(); acctNote(lines,C); }; }
+  var map={main:'bMain',weekly:'bWeek',monthly:'bMonth',out:'bOut'};
+  Object.keys(map).forEach(function(k){
+    var el=document.getElementById(map[k]);
+    el.value=C.bal[k]||'';
+    el.oninput=function(){ C.bal[k]=el.value; save(); acctNote(lines,C); };
   });
   acctNote(lines,C);
+  renderCycleCfg(C,live);
   renderHistory();
+}
+
+function lineRow(C,l){
+  var isPaid=!!PAID[l.id], off=(l.edited&&l.src==='t');
+  var r=document.createElement('div');
+  r.className='it'+(isPaid?' p':'')+(l.a==='weekly'?' gold':'');
+  r.innerHTML='<span class="st">'+(isPaid?'✓':'○')+'</span>'+
+    '<span class="nm">'+esc(l.n)+'<small>'+esc(l.a)+' account</small></span>'+
+    '<span class="chip'+(off?' ch':'')+'">'+(off?'changed':(isPaid?'paid':human(l.date)))+'</span>'+
+    '<span class="am">'+fmt(l.v)+'</span>'+
+    '<span class="ed" title="Edit this line">✎</span>';
+  r.onclick=function(ev){
+    if(ev.target.className==='ed'){ EDIT=(EDIT===l.id?null:l.id); render(); return; }
+    C.paid[l.id]=!isPaid; save(); render();
+  };
+  return r;
+}
+
+function editRow(C,l){
+  var d=document.createElement('div');
+  d.className='edit';
+  d.innerHTML='<div class="er">'+
+      '<label style="flex:1;min-width:150px">Name<input type="text" id="edN" value="'+esc(l.n)+'"></label>'+
+      '<label>Amount<input type="number" id="edV" value="'+(+l.v)+'" style="width:100px"></label>'+
+      '<label>Day<input type="number" id="edD" value="'+(+l.d)+'" style="width:64px"></label>'+
+    '</div><div class="er">'+
+      '<label>Group<input type="text" id="edG" value="'+esc(l.g)+'" style="width:130px"></label>'+
+      '<label>Account<select id="edA">'+
+        '<option value="main"'+(l.a==='main'?' selected':'')+'>main</option>'+
+        '<option value="weekly"'+(l.a==='weekly'?' selected':'')+'>weekly</option>'+
+        '<option value="monthly"'+(l.a==='monthly'?' selected':'')+'>monthly</option></select></label>'+
+      '<button class="pri" id="edOk" style="align-self:end">Done</button>'+
+      '<button class="danger" id="edDel" style="align-self:end">Delete from this cycle</button>'+
+    '</div>'+
+    '<div class="sn">Changes stay in this cycle. '+(l.src==='t'?'This line stops following the setup table once you change it.':'One-off expense.')+'</div>';
+  d.onclick=function(ev){ ev.stopPropagation(); };
+  var get=function(id){ return d.querySelector('#'+id); };
+  var apply=function(){
+    l.n=get('edN').value; l.g=get('edG').value.trim()||'Other';
+    l.v=+get('edV').value||0; l.a=get('edA').value;
+    l.d=Math.min(31,Math.max(1,+get('edD').value||1));
+    l.date=dateIn(l.d,VIEW); l.edited=true; save();
+  };
+  ['edN','edG','edV','edD'].forEach(function(id){ get(id).oninput=apply; });
+  get('edA').onchange=apply;
+  get('edOk').onclick=function(){ apply(); EDIT=null; render(); };
+  get('edDel').onclick=function(){
+    if(!confirm('Remove "'+l.n+'" from this cycle?')) return;
+    if(l.src==='t'&&l.tid) C.gone[l.tid]=1;    /* do not let the setup table put it back */
+    removeLine(C,l.id); EDIT=null; save(); render();
+  };
+  return d;
 }
 
 function acctNote(lines,C){
   var due={main:0,weekly:0,monthly:0}, spentExtra={main:0,weekly:0,monthly:0}, total=0;
   lines.forEach(function(l){
-    total+=l.v;
-    if(!l.paid){ due[l.a]=(due[l.a]||0)+l.v; }
-    else if(!l.tpl){ spentExtra[l.a]=(spentExtra[l.a]||0)+l.v; }   /* extras already spent */
+    total+=+l.v;
+    if(!PAID[l.id]){ due[l.a]=(due[l.a]||0)+ +l.v; }
+    else if(l.src==='x'){ spentExtra[l.a]=(spentExtra[l.a]||0)+ +l.v; }   /* extras already spent */
   });
-  var personal=+(DB.cfg.personal||0), buffer=+(DB.cfg.buffer||0);
+  var personal=+(C.cfg.personal||0), buffer=+(C.cfg.buffer||0);
   var mainTarget    = personal + buffer + due.main - spentExtra.main;
   var weeklyTarget  = due.weekly  - spentExtra.weekly;
   var monthlyTarget = due.monthly - spentExtra.monthly;
-  var outTarget     = (DB.cfg.salary-DB.cfg.loan) - total - (personal+buffer);
-  [mainTarget,weeklyTarget,monthlyTarget,outTarget].forEach(function(){});
+  var outTarget     = (C.cfg.salary-C.cfg.loan) - total - (personal+buffer);
   if(mainTarget<0) mainTarget=0; if(weeklyTarget<0) weeklyTarget=0;
   if(monthlyTarget<0) monthlyTarget=0; if(outTarget<0) outTarget=0;
 
@@ -303,10 +505,10 @@ function acctNote(lines,C){
     var el=document.getElementById(id); if(!el) return;
     var h='Should have <b>'+fmt(target)+'</b><br><span style="opacity:.75">'+label+'</span>';
     if(actual!=='' && actual!==undefined && actual!==null){
-      var d=Math.round(+actual-target);
-      if(Math.abs(d)<1) h+='<br><span style="color:var(--good)">on target</span>';
-      else if(d>0) h+='<br><span style="color:var(--good)">+'+fmt(d)+'</span>';
-      else h+='<br><span style="color:var(--crit)">'+fmt(-d)+' short</span>';
+      var diff=Math.round(+actual-target);
+      if(Math.abs(diff)<1) h+='<br><span style="color:var(--good)">on target</span>';
+      else if(diff>0) h+='<br><span style="color:var(--good)">+'+fmt(diff)+'</span>';
+      else h+='<br><span style="color:var(--crit)">'+fmt(-diff)+' short</span>';
     }
     el.innerHTML=h;
   }
@@ -316,11 +518,47 @@ function acctNote(lines,C){
 function addExtra(){
   var n=document.getElementById('exName').value.trim(), v=+document.getElementById('exAmt').value, a=document.getElementById('exAcct').value;
   if(!n||!v) return;
-  var C=ensureCycle(CUR);
-  C.extras.push({n:n,v:v,a:a,date:todayISO()});
-  C.paid['e'+(C.extras.length-1)]=true;
+  var C=DB.cycles[VIEW]; if(!C) return;
+  var cd=cycleDates(VIEW), date=(VIEW===CUR)?todayISO():cd.start;
+  var id='L'+(++DB.seq);
+  C.lines.push({id:id, n:n, g:'Extras', d:dayOf(date), v:v, a:a, date:date, src:'x', edited:true});
+  C.paid[id]=true;
   document.getElementById('exName').value=''; document.getElementById('exAmt').value='';
   save(); render();
+}
+
+/* ---------- cycle navigation ---------- */
+function goCycle(step){
+  var next=shiftKey(VIEW,step);
+  if(next>CUR) return;
+  VIEW=next; EDIT=null; refresh(); scrollTo(0,0);
+}
+function goNow(){ VIEW=CUR; EDIT=null; refresh(); scrollTo(0,0); }
+function openCycle(key){ VIEW=key; EDIT=null; refresh(); scrollTo(0,0); }
+function createViewed(){ newCycle(VIEW); refresh(); }
+
+/* ---------- this cycle's salary ---------- */
+function renderCycleCfg(C,live){
+  document.getElementById('ccSalary').value=C.cfg.salary;
+  document.getElementById('ccLoan').value=C.cfg.loan;
+  document.getElementById('ccPersonal').value=C.cfg.personal;
+  document.getElementById('ccBuffer').value=C.cfg.buffer;
+  document.getElementById('ccReset').classList.toggle('hide',!(live&&C.cfgEdited));
+  document.getElementById('ccNote').textContent = C.cfgEdited
+    ? 'These numbers are set for this cycle and no longer follow the setup table.'
+    : (live?'Following the setup table.':'Saved as they were when this cycle ran.');
+}
+function saveCycleCfg(){
+  var C=DB.cycles[VIEW]; if(!C) return;
+  C.cfg={ salary:+document.getElementById('ccSalary').value||0,
+          loan:+document.getElementById('ccLoan').value||0,
+          personal:+document.getElementById('ccPersonal').value||0,
+          buffer:+document.getElementById('ccBuffer').value||0 };
+  C.cfgEdited=true; save(); refresh();
+}
+function resetCycleCfg(){
+  var C=DB.cycles[VIEW]; if(!C) return;
+  delete C.cfgEdited; C.cfg=cfgCopy(DB.cfg); save(); refresh();
 }
 
 /* ---------- setup ---------- */
@@ -338,20 +576,13 @@ function renderSetup(){
       '<td><input type="number" value="'+t.d+'" data-i="'+i+'" data-k="d" style="width:52px"></td>'+
       '<td class="n"><input type="number" value="'+t.v+'" data-i="'+i+'" data-k="v" style="width:80px"></td>'+
       '<td><select data-i="'+i+'" data-k="a"><option'+(t.a==='main'?' selected':'')+'>main</option><option'+(t.a==='weekly'?' selected':'')+'>weekly</option><option'+(t.a==='monthly'?' selected':'')+'>monthly</option></select></td>'+
-      '<td><input value="'+(t.end||'')+'" data-i="'+i+'" data-k="end" placeholder="YYYY-MM" style="width:82px"></td>'+
+      '<td><input value="'+esc(t.end||'')+'" data-i="'+i+'" data-k="end" placeholder="YYYY-MM" style="width:82px"></td>'+
       '<td><button class="danger" onclick="delLine('+i+')">✕</button></td>';
     b.appendChild(tr);
   });
 }
-function addLine(){ DB.tpl.push({n:'New line',g:'Other',d:1,v:0,a:'monthly',end:''}); save(); renderSetup(); }
-function delLine(i){ DB.tpl.splice(i,1); save(); try{ renderSetup(); render(); }catch(err){ document.getElementById('list').innerHTML='<div class="sn">Error: '+err.message+'</div>'; }
-if(!STORE_OK){
-  var w=document.createElement('div');
-  w.className='card';
-  w.style.borderColor='var(--crit)';
-  w.innerHTML='<h2 style="color:var(--crit)">Preview only — nothing is being saved</h2><div class="note">You are viewing this inside a chat preview, where browser storage is switched off. Download the file and open it from your phone or computer, then everything saves normally.</div>';
-  document.querySelector('.wrap').insertBefore(w, document.querySelector('.card'));
-} }
+function addLine(){ DB.tpl.push({id:'t'+(++DB.seq), n:'New line', g:'Other', d:1, v:0, a:'monthly', end:''}); save(); renderSetup(); }
+function delLine(i){ DB.tpl.splice(i,1); save(); refresh(); }
 function saveSetup(){
   DB.cfg.salary=+document.getElementById('cfgSalary').value||0;
   DB.cfg.loan=+document.getElementById('cfgLoan').value||0;
@@ -362,14 +593,7 @@ function saveSetup(){
     var i=+el.dataset.i,k=el.dataset.k,v=el.value;
     DB.tpl[i][k]=(k==='d'||k==='v')?+v:v;
   });
-  save(); try{ renderSetup(); render(); }catch(err){ document.getElementById('list').innerHTML='<div class="sn">Error: '+err.message+'</div>'; }
-if(!STORE_OK){
-  var w=document.createElement('div');
-  w.className='card';
-  w.style.borderColor='var(--crit)';
-  w.innerHTML='<h2 style="color:var(--crit)">Preview only — nothing is being saved</h2><div class="note">You are viewing this inside a chat preview, where browser storage is switched off. Download the file and open it from your phone or computer, then everything saves normally.</div>';
-  document.querySelector('.wrap').insertBefore(w, document.querySelector('.card'));
-}
+  save(); refresh();
 }
 
 /* ---------- history ---------- */
@@ -378,45 +602,96 @@ function renderHistory(){
   var h='<table><thead><tr><th>Cycle</th><th style="text-align:right">Committed</th><th style="text-align:right">Extras</th><th style="text-align:right">Free</th></tr></thead><tbody>';
   keys.forEach(function(k){
     var C=DB.cycles[k], cd=cycleDates(k), tot=0, ex=0;
-    DB.tpl.forEach(function(t){ if(lineActive(t,k)) tot+=+t.v; });
-    C.extras.forEach(function(e){ ex+=+e.v; });
-    h+='<tr><td>'+MON[cd.m-1]+' '+cd.y+(k===CUR?' <b>(now)</b>':'')+'</td><td style="text-align:right">'+fmt(tot)+'</td><td style="text-align:right">'+fmt(ex)+'</td><td style="text-align:right">'+fmt((DB.cfg.salary-DB.cfg.loan)-tot-ex)+'</td></tr>';
+    C.lines.forEach(function(l){ if(l.src==='x') ex+=+l.v; else tot+=+l.v; });
+    var tag=(k===CUR?' <b>(now)</b>':'')+(k===VIEW&&k!==CUR?' <b>(open)</b>':'');
+    h+='<tr class="hrow" onclick="openCycle(\''+k+'\')"><td>'+MON[cd.m-1]+' '+cd.y+tag+'</td>'+
+       '<td style="text-align:right">'+fmt(tot)+'</td><td style="text-align:right">'+fmt(ex)+'</td>'+
+       '<td style="text-align:right">'+fmt((C.cfg.salary-C.cfg.loan)-tot-ex)+'</td></tr>';
   });
-  document.getElementById('histBody').innerHTML=h+'</tbody></table>';
+  document.getElementById('histBody').innerHTML=h+'</tbody></table>'+
+    '<div class="sn">Tap a cycle to open and edit it. Each row uses the salary and lines saved with that cycle.</div>';
 }
 
-/* ---------- backup ---------- */
-function exportData(){
-  var b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+/* ---------- the JSON file ---------- */
+function fileName(dated){ return dated ? 'budget-'+todayISO()+'.json' : 'budget.json'; }
+function json(){ return JSON.stringify(DB,null,2); }
+
+/* iPhone Safari cannot write to disk on its own, so hand the file to the
+   share sheet ("Save to Files"); every other browser just downloads it. */
+function saveToFile(){
+  var name=fileName(false), text=json();
+  if(navigator.canShare && window.File){
+    var f=new File([text],name,{type:'application/json'});
+    if(navigator.canShare({files:[f]})){
+      navigator.share({files:[f],title:'Budget'}).then(function(){
+        markSaved(); refresh();
+      })['catch'](function(err){
+        if(err && err.name==='AbortError') return;    /* user backed out — not saved */
+        download(text,name); markSaved(); refresh();
+      });
+      return;
+    }
+  }
+  download(text,name); markSaved(); refresh();
+}
+function exportData(dated){ download(json(),fileName(dated)); markSaved(); refresh(); }
+function download(text,name){
+  var b=new Blob([text],{type:'application/json'});
   var a=document.createElement('a'); a.href=URL.createObjectURL(b);
-  a.download='budget-backup-'+todayISO()+'.json'; a.click(); URL.revokeObjectURL(a.href);
+  a.download=name; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
 }
 function importData(inp){
   var f=inp.files[0]; if(!f) return;
   var r=new FileReader();
-  r.onload=function(){ try{ DB=JSON.parse(r.result); save(); try{ renderSetup(); render(); }catch(err){ document.getElementById('list').innerHTML='<div class="sn">Error: '+err.message+'</div>'; }
-if(!STORE_OK){
-  var w=document.createElement('div');
-  w.className='card';
-  w.style.borderColor='var(--crit)';
-  w.innerHTML='<h2 style="color:var(--crit)">Preview only — nothing is being saved</h2><div class="note">You are viewing this inside a chat preview, where browser storage is switched off. Download the file and open it from your phone or computer, then everything saves normally.</div>';
-  document.querySelector('.wrap').insertBefore(w, document.querySelector('.card'));
-} alert('Restored.'); }catch(e){ alert('Bad file.'); } };
+  r.onload=function(){
+    var raw;
+    try{ raw=JSON.parse(r.result); }catch(e){ alert('That file could not be read.'); return; }
+    if(!raw || !raw.tpl || !raw.cycles){ alert('That does not look like a budget file.'); return; }
+    if(pending() && !confirm('Replace what is in this browser with the file? '+pending()+' change(s) made here since the last save will be lost.')) return;
+    try{ adopt(raw); }catch(e){ alert('That file could not be read.'); return; }
+    VIEW=null; EDIT=null;
+    save(); META.savedRev=META.rev; save();   /* just loaded it, so it matches */
+    refresh(); alert('Loaded from your file.');
+  };
+  r.onerror=function(){ alert('That file could not be read.'); };
   r.readAsText(f);
+  inp.value='';                                /* let the same file be picked again */
+}
+function renderSaveState(){
+  var n=pending(), st=document.getElementById('saveState'), bar=document.getElementById('saveBar');
+  if(!st||!bar) return;
+  st.textContent = META.savedAt
+    ? (n ? n+' change'+(n===1?'':'s')+' since you saved to your file · last saved '+META.savedAt
+         : 'Your file is up to date · saved '+META.savedAt)
+    : 'Not saved to a file yet.';
+  var nag = n>=12 || (n>0 && !META.savedAt);
+  bar.classList.toggle('hide',!nag);
+  if(nag) bar.innerHTML='<span style="flex:1;min-width:150px">'+n+' change'+(n===1?'':'s')+
+    ' live only in this browser.</span><button class="pri" onclick="saveToFile()">Save to my file</button>';
 }
 
 function toggle(id){ document.getElementById(id).classList.toggle('hide'); }
 function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
 
-try{ renderSetup(); render(); }catch(err){ document.getElementById('list').innerHTML='<div class="sn">Error: '+err.message+'</div>'; }
-if(!STORE_OK){
+function refresh(){
+  try{ renderSetup(); render(); }
+  catch(err){ document.getElementById('list').innerHTML='<div class="sn warn">Error: '+esc(err.message)+'</div>'; }
+  renderSaveState();
+  if(!STORE_OK) storageWarning();
+}
+function storageWarning(){
+  if(document.getElementById('noStore')) return;
   var w=document.createElement('div');
-  w.className='card';
-  w.style.borderColor='var(--crit)';
+  w.id='noStore'; w.className='card'; w.style.borderColor='var(--crit)';
   w.innerHTML='<h2 style="color:var(--crit)">Preview only — nothing is being saved</h2><div class="note">You are viewing this inside a chat preview, where browser storage is switched off. Download the file and open it from your phone or computer, then everything saves normally.</div>';
   document.querySelector('.wrap').insertBefore(w, document.querySelector('.card'));
 }
+
+try{ LAST=JSON.stringify(DB); localStorage.setItem(KEY,LAST); localStorage.setItem(MKEY,JSON.stringify(META)); }
+catch(e){ STORE_OK=false; }
+refresh();
 </script>
 </body>
 </html>
