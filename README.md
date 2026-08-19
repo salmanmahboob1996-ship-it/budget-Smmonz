@@ -34,3 +34,10 @@ rewrites a finished month. Use ◀ / ▶ to move between cycles; any past cycle 
 be opened and corrected, and a month with no record yet can be created to
 backfill it. Inside a cycle, ✎ edits or deletes a single line — a line that has
 been edited stops following the setup table and is marked "changed".
+
+## Keeping it private
+
+The repository is public, and GitHub visibility is per-repository — there is no
+way to keep one file in it private. So the data simply never goes in: the app
+ships with an empty template, and `budget.json` stays in iCloud Drive on the
+phone. `.gitignore` blocks it from being committed by accident.

@@ -1,0 +1,4 @@
+# personal data — never commit these, the repo is public
+budget.json
+budget-*.json
+*backup*.json
