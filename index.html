@@ -158,6 +158,7 @@
         <label style="font-size:13px">Big credit (auto) <input type="number" id="ccLoan" style="width:110px"></label>
         <label style="font-size:13px">Personal <input type="number" id="ccPersonal" style="width:90px"></label>
         <label style="font-size:13px">Buffer <input type="number" id="ccBuffer" style="width:90px"></label>
+        <label style="font-size:13px">Move out (savings) <input type="number" id="ccSavings" placeholder="auto" style="width:90px"></label>
         <button class="pri" onclick="saveCycleCfg()">Save</button>
         <button id="ccReset" class="hide" onclick="resetCycleCfg()">Follow setup again</button>
       </div>
@@ -176,6 +177,7 @@
         <label style="font-size:13px">Cycle starts day <input type="number" id="cfgDay" style="width:70px"></label>
         <label style="font-size:13px">Personal <input type="number" id="cfgPersonal" style="width:90px"></label>
         <label style="font-size:13px">Buffer <input type="number" id="cfgBuffer" style="width:90px"></label>
+        <label style="font-size:13px">Move out (savings) <input type="number" id="cfgSavings" placeholder="auto" style="width:90px"></label>
       </div>
       <table id="tplTable"><thead><tr><th>Name</th><th>Group</th><th>Day</th><th style="text-align:right">Amount</th><th>Acct</th><th>Ends</th><th></th></tr></thead><tbody id="tplBody"></tbody></table>
       <div class="row">
@@ -296,7 +298,8 @@ function migrate(db){
   });
   return db;
 }
-function cfgCopy(c){ return {salary:+c.salary||0, loan:+c.loan||0, personal:+c.personal||0, buffer:+c.buffer||0}; }
+function cfgCopy(c){ return {salary:+c.salary||0, loan:+c.loan||0, personal:+c.personal||0, buffer:+c.buffer||0,
+  savings:(c.savings===''||c.savings==null)?'':+c.savings||0}; }
 
 /* ---------- cycle maths ---------- */
 function pad(n){ return String(n).padStart(2,'0'); }
@@ -504,7 +507,8 @@ function acctNote(lines,C){
   var mainTarget    = personal + buffer + due.main - spentExtra.main;
   var weeklyTarget  = due.weekly  - spentExtra.weekly;
   var monthlyTarget = due.monthly - spentExtra.monthly;
-  var outTarget     = (C.cfg.salary-C.cfg.loan) - total - (personal+buffer);
+  var outFixed=(C.cfg.savings!==''&&C.cfg.savings!=null);
+  var outTarget = outFixed ? +C.cfg.savings : (C.cfg.salary-C.cfg.loan) - total - (personal+buffer);
   if(mainTarget<0) mainTarget=0; if(weeklyTarget<0) weeklyTarget=0;
   if(monthlyTarget<0) monthlyTarget=0; if(outTarget<0) outTarget=0;
 
@@ -512,7 +516,7 @@ function acctNote(lines,C){
       'Personal '+fmt(personal)+' + buffer '+fmt(buffer)+(due.main?' + '+fmt(due.main)+' due':'')+(spentExtra.main?' − '+fmt(spentExtra.main)+' spent':''));
   set('adWeek', weeklyTarget, C.bal.weekly, 'Groceries left to spend');
   set('adMonth',monthlyTarget,C.bal.monthly,'Bills left to pay');
-  set('adOut',  outTarget,    C.bal.out,    'Should be transferred out');
+  set('adOut',  outTarget,    C.bal.out,    outFixed?'Fixed savings target':'Should be transferred out');
 
   function set(id,target,actual,label){
     var el=document.getElementById(id); if(!el) return;
@@ -556,6 +560,7 @@ function renderCycleCfg(C,live){
   document.getElementById('ccLoan').value=C.cfg.loan;
   document.getElementById('ccPersonal').value=C.cfg.personal;
   document.getElementById('ccBuffer').value=C.cfg.buffer;
+  document.getElementById('ccSavings').value=(C.cfg.savings===''||C.cfg.savings==null)?'':C.cfg.savings;
   document.getElementById('ccReset').classList.toggle('hide',!(live&&C.cfgEdited));
   document.getElementById('ccNote').textContent = C.cfgEdited
     ? 'These numbers are set for this cycle and no longer follow the setup table.'
@@ -566,7 +571,8 @@ function saveCycleCfg(){
   C.cfg={ salary:+document.getElementById('ccSalary').value||0,
           loan:+document.getElementById('ccLoan').value||0,
           personal:+document.getElementById('ccPersonal').value||0,
-          buffer:+document.getElementById('ccBuffer').value||0 };
+          buffer:+document.getElementById('ccBuffer').value||0,
+          savings:(document.getElementById('ccSavings').value==='')?'':+document.getElementById('ccSavings').value||0 };
   C.cfgEdited=true; save(); refresh();
 }
 function resetCycleCfg(){
@@ -581,6 +587,7 @@ function renderSetup(){
   document.getElementById('cfgDay').value=DB.cfg.startDay;
   document.getElementById('cfgPersonal').value=DB.cfg.personal||0;
   document.getElementById('cfgBuffer').value=DB.cfg.buffer||0;
+  document.getElementById('cfgSavings').value=(DB.cfg.savings===''||DB.cfg.savings==null)?'':DB.cfg.savings;
   var b=document.getElementById('tplBody'); b.innerHTML='';
   DB.tpl.forEach(function(t,i){
     var tr=document.createElement('tr');
@@ -602,6 +609,8 @@ function saveSetup(){
   DB.cfg.startDay=Math.min(28,Math.max(1,+document.getElementById('cfgDay').value||28));
   DB.cfg.personal=+document.getElementById('cfgPersonal').value||0;
   DB.cfg.buffer=+document.getElementById('cfgBuffer').value||0;
+  var sv=document.getElementById('cfgSavings').value;
+  DB.cfg.savings=(sv==='')?'':+sv||0;
   document.querySelectorAll('#tplBody [data-i]').forEach(function(el){
     var i=+el.dataset.i,k=el.dataset.k,v=el.value;
     DB.tpl[i][k]=(k==='d'||k==='v')?+v:v;
