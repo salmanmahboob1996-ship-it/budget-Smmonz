@@ -13,8 +13,9 @@ expenses are added.
 
 In this browser's `localStorage`, and nowhere else. The app has no server and
 makes no network calls — nothing about your money leaves the phone. The
-repository ships empty: no amounts, no salary, no bill list. All of that comes
-from your own `budget.json`, which is never committed.
+repository carries the recurring list as names and due days only: every amount
+in it is `0`, and no salary figure is committed. The real numbers come from your
+own `budget.json`, which is never committed.
 
 That also means clearing Safari data, or changing phone, loses it. So the
 **Save to my file** button hands the whole database to the iOS share sheet:
@@ -38,6 +39,7 @@ been edited stops following the setup table and is marked "changed".
 ## Keeping it private
 
 The repository is public, and GitHub visibility is per-repository — there is no
-way to keep one file in it private. So the data simply never goes in: the app
-ships with an empty template, and `budget.json` stays in iCloud Drive on the
-phone. `.gitignore` blocks it from being committed by accident.
+way to keep one file in it private. So the money never goes in: the committed
+template holds names and dates with every amount at `0`, and `budget.json` stays
+in iCloud Drive on the phone. `.gitignore` blocks it from being committed by
+accident.

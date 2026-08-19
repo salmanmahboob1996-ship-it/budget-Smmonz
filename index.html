@@ -209,10 +209,37 @@
 var KEY='salman_budget_v1';
 var MKEY='salman_budget_v1_meta';
 
-/* ---------- empty starting point: real figures come from the JSON file ---------- */
+/* ---------- the recurring list: names and due days only ----------
+   Every amount here is 0 on purpose — this repository is public, so the real
+   figures live only in your own budget.json and in this browser. */
 var DEFAULT={
   cfg:{salary:0, loan:0, startDay:28, personal:0, buffer:0},
-  tpl:[],
+  tpl:[
+    {n:"France credit (D360)", g:"Debt", d:28, v:0, a:"monthly", end:"2027-03"},
+    {n:"PS5 Pro — Tabby", g:"Debt", d:29, v:0, a:"monthly", end:"2026-10"},
+    {n:"Gym — Tabby", g:"Debt", d:2, v:0, a:"monthly", end:"2026-10"},
+    {n:"My wife", g:"Home", d:28, v:0, a:"monthly", end:""},
+    {n:"Home rent (Ejar)", g:"Home", d:27, v:0, a:"monthly", end:""},
+    {n:"STC", g:"Connectivity", d:28, v:0, a:"monthly", end:""},
+    {n:"WiFi", g:"Connectivity", d:1, v:0, a:"monthly", end:""},
+    {n:"Mobily", g:"Connectivity", d:1, v:0, a:"monthly", end:""},
+    {n:"Claude", g:"Subscriptions", d:4, v:0, a:"monthly", end:""},
+    {n:"iCloud 2TB", g:"Subscriptions", d:8, v:0, a:"monthly", end:""},
+    {n:"PSN", g:"Subscriptions", d:9, v:0, a:"monthly", end:""},
+    {n:"Spotify", g:"Subscriptions", d:22, v:0, a:"monthly", end:""},
+    {n:"Apple", g:"Subscriptions", d:26, v:0, a:"monthly", end:""},
+    {n:"Fuel 1", g:"Car", d:6, v:0, a:"monthly", end:""},
+    {n:"Fuel 2", g:"Car", d:20, v:0, a:"monthly", end:""},
+    {n:"Car wash 1", g:"Car", d:1, v:0, a:"monthly", end:""},
+    {n:"Car wash 2", g:"Car", d:8, v:0, a:"monthly", end:""},
+    {n:"Car wash 3", g:"Car", d:15, v:0, a:"monthly", end:""},
+    {n:"Car wash 4", g:"Car", d:22, v:0, a:"monthly", end:""},
+    {n:"Haircut", g:"Personal", d:15, v:0, a:"monthly", end:""},
+    {n:"Week 1 — groceries", g:"Weekly account", d:28, v:0, a:"weekly", end:""},
+    {n:"Week 2 — groceries", g:"Weekly account", d:4, v:0, a:"weekly", end:""},
+    {n:"Week 3 — groceries", g:"Weekly account", d:11, v:0, a:"weekly", end:""},
+    {n:"Week 4 — groceries", g:"Weekly account", d:18, v:0, a:"weekly", end:""}
+  ],
   cycles:{}
 };
 
