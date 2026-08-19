@@ -106,6 +106,7 @@
     <button onclick="goCycle(-1)">◀ Previous</button>
     <button onclick="goCycle(1)">Next ▶</button>
     <button id="btnNow" class="hide" onclick="goNow()">Back to now</button>
+    <button onclick="hardRefresh()" title="Reload the app and pick up updates">↻ Refresh</button>
     <span class="now" id="navNote"></span>
   </div>
   <div id="pastBar" class="past hide"></div>
@@ -722,6 +723,8 @@ function renderSaveState(){
     ' live only in this browser.</span><button class="pri" onclick="saveToFile()">Save to my file</button>';
 }
 
+/* home-screen apps have no address bar — reload with a cache-buster so updates arrive too */
+function hardRefresh(){ location.replace(location.pathname+'?r='+Date.now()); }
 function toggle(id){ document.getElementById(id).classList.toggle('hide'); }
 function reveal(id){
   var el=document.getElementById(id);
