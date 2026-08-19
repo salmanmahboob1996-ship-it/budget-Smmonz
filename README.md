@@ -12,7 +12,9 @@ expenses are added.
 ## Where the data lives
 
 In this browser's `localStorage`, and nowhere else. The app has no server and
-makes no network calls — nothing about your money leaves the phone.
+makes no network calls — nothing about your money leaves the phone. The
+repository ships empty: no amounts, no salary, no bill list. All of that comes
+from your own `budget.json`, which is never committed.
 
 That also means clearing Safari data, or changing phone, loses it. So the
 **Save to my file** button hands the whole database to the iOS share sheet:
