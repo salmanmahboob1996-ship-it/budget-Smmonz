@@ -378,7 +378,7 @@ function render(){
   if(VIEW===CUR) syncCurrent(CUR);
 
   var cd=cycleDates(VIEW), C=DB.cycles[VIEW], live=(VIEW===CUR);
-  document.getElementById('cycleTitle').textContent=MON[cd.m-1]+' '+cd.y+' cycle';
+  document.getElementById('cycleTitle').textContent=MON[cd.em-1]+' '+cd.ey+' cycle';
   document.getElementById('btnNow').classList.toggle('hide',live);
   document.getElementById('navNote').textContent='Today '+human(today);
   document.getElementById('stub').classList.toggle('hide',!!C);
@@ -395,7 +395,7 @@ function render(){
 
   document.getElementById('cycleSub').innerHTML=human(cd.start)+' → '+human(cd.end)+
     ' · working salary <b>'+fmt(C.cfg.salary-C.cfg.loan)+'</b> (salary '+fmt(C.cfg.salary)+' − big credit '+fmt(C.cfg.loan)+', auto-deducted)';
-  document.getElementById('today').textContent=live?('Today '+human(today)):(MON[cd.m-1]+' '+cd.y);
+  document.getElementById('today').textContent=live?('Today '+human(today)):(MON[cd.em-1]+' '+cd.ey);
 
   var lines=C.lines.slice().sort(function(x,y){ return x.date<y.date?-1:(x.date>y.date?1:0); });
   var total=0,paid=0,cnt=0;
@@ -626,7 +626,7 @@ function renderHistory(){
     var C=DB.cycles[k], cd=cycleDates(k), tot=0, ex=0;
     C.lines.forEach(function(l){ if(l.src==='x') ex+=+l.v; else tot+=+l.v; });
     var tag=(k===CUR?' <b>(now)</b>':'')+(k===VIEW&&k!==CUR?' <b>(open)</b>':'');
-    h+='<tr class="hrow" onclick="openCycle(\''+k+'\')"><td>'+MON[cd.m-1]+' '+cd.y+tag+'</td>'+
+    h+='<tr class="hrow" onclick="openCycle(\''+k+'\')"><td>'+MON[cd.em-1]+' '+cd.ey+tag+'</td>'+
        '<td style="text-align:right">'+fmt(tot)+'</td><td style="text-align:right">'+fmt(ex)+'</td>'+
        '<td style="text-align:right">'+fmt((C.cfg.salary-C.cfg.loan)-tot-ex)+'</td></tr>';
   });
