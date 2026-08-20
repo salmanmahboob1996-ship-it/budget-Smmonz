@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
 <title>Budget</title>
 <style>
   :root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--tx:#0b0b0b;--tx2:#52514e;--muted:#898781;
@@ -63,7 +68,6 @@
     .it .chip{grid-area:chip;justify-self:start}
   }
   .chip{font-size:10.5px;font-weight:600;color:var(--tx2);background:var(--chip);border-radius:20px;padding:2px 8px;white-space:nowrap;justify-self:end}
-  .chip.ch{background:transparent;border:1px dashed var(--s4);color:var(--s4)}
   .it.gold{border-left:3px solid var(--s3);padding-left:5px}
   .edit{background:var(--paid);border:1px solid var(--bd);border-radius:10px;padding:10px 11px;margin:2px 0 8px}
   .edit .er{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -450,12 +454,12 @@ function render(){
 }
 
 function lineRow(C,l){
-  var isPaid=!!PAID[l.id], off=(l.edited&&l.src==='t');
+  var isPaid=!!PAID[l.id];
   var r=document.createElement('div');
   r.className='it'+(isPaid?' p':'')+(l.a==='weekly'?' gold':'');
   r.innerHTML='<span class="st">'+(isPaid?'✓':'○')+'</span>'+
     '<span class="nm">'+esc(l.n)+'<small>'+esc(l.a)+' account</small></span>'+
-    '<span class="chip'+(off?' ch':'')+'">'+(off?'changed':(isPaid?'paid':human(l.date)))+'</span>'+
+    '<span class="chip">'+(isPaid?'paid':human(l.date))+'</span>'+
     '<span class="am">'+fmt(l.v)+'</span>'+
     '<span class="ed" title="Edit this line">✎</span>';
   r.onclick=function(ev){
@@ -666,7 +670,7 @@ function saveToFile(){
   if(navigator.canShare && window.File){
     var f=new File([text],name,{type:'application/json'});
     if(navigator.canShare({files:[f]})){
-      navigator.share({files:[f],title:'Budget'}).then(function(){
+      navigator.share({files:[f]}).then(function(){
         markSaved(); refresh();
       })['catch'](function(err){
         if(err && err.name==='AbortError') return;    /* user backed out — not saved */
