@@ -5,99 +5,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0f0d" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
 <title>Budget</title>
 <style>
-  :root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--tx:#0b0b0b;--tx2:#52514e;--muted:#898781;
-    --grid:#e1e0d9;--bd:rgba(11,11,11,.10);--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;
-    --good:#006300;--crit:#d03b3b;--chip:rgba(11,11,11,.06);--paid:rgba(11,11,11,.045)}
-  @media(prefers-color-scheme:dark){:root{color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--tx:#fff;--tx2:#c3c2b7;
-    --muted:#898781;--grid:#2c2c2a;--bd:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;
-    --good:#0ca30c;--crit:#e66767;--chip:rgba(255,255,255,.08);--paid:rgba(255,255,255,.06)}}
+  :root{color-scheme:light;
+    --page:#f2f6f4;--surface:#ffffff;--tx:#0d1714;--tx2:#49584f;--muted:#84928a;
+    --grid:#e1e8e4;--bd:rgba(13,23,20,.08);--s1:#1f6fd6;--s2:#e85d2f;--s3:#0ea877;--s4:#d99a1b;
+    --good:#0a8f5e;--crit:#d64545;--chip:rgba(13,23,20,.06);--paid:rgba(13,23,20,.04);
+    --shadow:0 10px 30px rgba(13,23,20,.07);--glow:rgba(14,168,119,.10)}
+  @media(prefers-color-scheme:dark){:root{color-scheme:dark;
+    --page:#0a0f0d;--surface:#12181c;--tx:#eef4f1;--tx2:#a3b2aa;--muted:#69776f;
+    --grid:#20292c;--bd:rgba(255,255,255,.08);--s1:#4da3ff;--s2:#ff7a4d;--s3:#2dd4a0;--s4:#ffc24d;
+    --good:#3ddc97;--crit:#ff6b6b;--chip:rgba(255,255,255,.07);--paid:rgba(255,255,255,.05);
+    --shadow:0 12px 32px rgba(0,0,0,.35);--glow:rgba(45,212,160,.09)}}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--page);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45;padding:24px 16px 80px}
+  body{background:radial-gradient(900px 480px at 50% -8%,var(--glow),transparent 70%),var(--page);
+    color:var(--tx);font-family:ui-rounded,'SF Pro Rounded',system-ui,-apple-system,'Segoe UI',sans-serif;
+    line-height:1.45;padding:24px 16px 80px}
   .wrap{max-width:780px;margin:0 auto}
-  .kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  h1{font-size:23px;font-weight:700;margin-top:3px}
-  .sub{color:var(--tx2);font-size:13px;margin-top:3px}
-  .card{background:var(--surface);border:1px solid var(--bd);border-radius:14px;padding:18px 20px;margin-top:14px}
-  .card h2{font-size:14.5px;font-weight:650}
-  .card .note{font-size:12.5px;color:var(--tx2);margin:2px 0 12px}
+  .kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--s3);font-weight:800}
+  h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-top:3px}
+  .sub{color:var(--tx2);font-size:13px;margin-top:4px}
+  .card{background:var(--surface);border:1px solid var(--bd);border-radius:20px;padding:20px;margin-top:16px;box-shadow:var(--shadow)}
+  .card h2{font-size:15px;font-weight:800;letter-spacing:-.01em}
+  .card .note{font-size:12.5px;color:var(--tx2);margin:3px 0 12px}
   .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   @media(max-width:620px){.grid3{grid-template-columns:1fr}}
-  .tile{border:1px solid var(--bd);border-radius:12px;padding:11px 14px;background:var(--page)}
-  .tile .l{font-size:11.5px;color:var(--tx2)}
-  .tile .v{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px}
+  .tile{border:1px solid var(--bd);border-radius:16px;padding:13px 15px;background:var(--page)}
+  .tile .l{font-size:11.5px;color:var(--tx2);font-weight:600}
+  .tile .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin-top:1px}
   .tile .c{font-size:11px;color:var(--muted);margin-top:2px}
-  #tPaid .v{color:var(--good)} #tFree .v{color:var(--s1)}
-  .pbar{height:9px;background:var(--chip);border-radius:6px;margin-top:12px;overflow:hidden}
-  .pbar>div{height:9px;background:var(--s3);border-radius:6px 0 0 6px;transition:width .2s}
-  .pcap{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px}
-  .nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px}
-  .nav button{padding:5px 11px;font-size:12.5px}
-  .nav .now{margin-left:auto;font-size:11.5px;color:var(--muted)}
-  .unsaved{border:1px solid var(--s4);background:var(--chip);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--tx2);margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .unsaved button{padding:5px 11px;font-size:12.5px}
-  .past{border:1px solid var(--s4);background:var(--chip);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--tx2);margin-top:12px}
+  #tPaid .v{color:var(--good)}
+  #tFree .v{background:linear-gradient(90deg,var(--s3),var(--s1));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--s3)}
+  .pbar{height:10px;background:var(--chip);border-radius:999px;margin-top:14px;overflow:hidden}
+  .pbar>div{height:10px;background:linear-gradient(90deg,var(--s3),var(--s1));border-radius:999px;transition:width .25s}
+  .pcap{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px;font-weight:600}
+  .nav{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .nav button{padding:6px 13px;font-size:12.5px}
+  .nav .now{margin-left:auto;font-size:11.5px;color:var(--muted);font-weight:600}
+  .unsaved{border:1px solid var(--s4);background:var(--chip);border-radius:14px;padding:10px 13px;font-size:12.5px;color:var(--tx2);margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .unsaved button{padding:6px 13px;font-size:12.5px}
+  .past{border:1px solid var(--s4);background:var(--chip);border-radius:14px;padding:10px 13px;font-size:12.5px;color:var(--tx2);margin-top:12px}
   .acct{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   @media(max-width:700px){.acct{grid-template-columns:1fr 1fr}}
-  .abox{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;background:var(--page)}
-  .abox .an{font-size:11.5px;color:var(--tx2);font-weight:600}
-  .abox input{width:100%;font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;border:none;background:transparent;color:var(--tx);padding:2px 0;outline:none;border-bottom:1px dashed var(--bd)}
-  .abox .ad{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35}
-  .abox.m{border-left:3px solid var(--s1)}.abox.w{border-left:3px solid var(--s3)}
-  .abox.mo{border-left:3px solid var(--s2)}.abox.o{border-left:3px solid var(--s4)}
-  .gh{display:flex;justify-content:space-between;align-items:baseline;padding:12px 2px 6px;font-size:11.5px;
-    text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:650;border-bottom:1px solid var(--grid)}
-  .gh .gt{font-size:12px;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums;color:var(--tx2)}
-  .it{display:grid;grid-template-columns:26px 1fr auto 78px 30px;gap:9px;align-items:center;padding:8px 2px;
-    font-size:13.5px;border-bottom:1px solid var(--grid);cursor:pointer;border-radius:8px}
-  .it:hover{background:var(--paid)}
-  .it.p{background:var(--paid)} .it.p .nm,.it.p .am{text-decoration:line-through;color:var(--muted)}
-  .it .st{text-align:center;font-size:14px;color:var(--muted)} .it.p .st{color:var(--good);font-weight:700}
-  .it .nm small{display:block;font-size:11px;color:var(--muted)}
-  .it .am{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
-  .it .ed{color:var(--muted);font-size:15px;text-align:center;opacity:.55;padding:4px 0}
-  .it:hover .ed{opacity:1}
+  .abox{border:1px solid var(--bd);border-radius:16px;padding:13px 15px;background:var(--page)}
+  .abox .an{font-size:11.5px;color:var(--tx2);font-weight:700;letter-spacing:.02em}
+  .abox input{width:100%;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;border:none;background:transparent;color:var(--tx);padding:2px 0;outline:none;border-bottom:1px dashed var(--bd)}
+  .abox .ad{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
+  .abox.m{border-top:3px solid var(--s1)}.abox.w{border-top:3px solid var(--s3)}
+  .abox.mo{border-top:3px solid var(--s2)}.abox.o{border-top:3px solid var(--s4)}
+  .gh{display:flex;justify-content:space-between;align-items:baseline;padding:14px 2px 6px;font-size:11px;
+    text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:800;border-bottom:1px solid var(--grid)}
+  .gh .gt{font-size:12.5px;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums;color:var(--tx2);font-weight:700}
+  .it{display:grid;grid-template-columns:26px 1fr auto 78px 30px;gap:9px;align-items:center;padding:9px 2px;
+    font-size:13.5px;border-bottom:1px solid var(--grid);cursor:pointer;border-radius:10px}
   @media(max-width:520px){
     .it{grid-template-columns:22px 1fr 74px 30px;grid-template-areas:"st nm am ed" "st chip am ed";column-gap:7px;row-gap:1px}
     .it .st{grid-area:st}.it .nm{grid-area:nm}.it .am{grid-area:am}.it .ed{grid-area:ed}
     .it .chip{grid-area:chip;justify-self:start}
   }
-  .chip{font-size:10.5px;font-weight:600;color:var(--tx2);background:var(--chip);border-radius:20px;padding:2px 8px;white-space:nowrap;justify-self:end}
+  .it:hover{background:var(--paid)}
+  .it.p{background:var(--paid)} .it.p .nm,.it.p .am{text-decoration:line-through;color:var(--muted)}
+  .it .st{text-align:center;font-size:14px;color:var(--muted)} .it.p .st{color:var(--good);font-weight:800}
+  .it .nm small{display:block;font-size:11px;color:var(--muted)}
+  .it .am{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+  .it .ed{color:var(--muted);font-size:15px;text-align:center;opacity:.55;padding:4px 0}
+  .it:hover .ed{opacity:1}
+  .chip{font-size:10.5px;font-weight:700;color:var(--tx2);background:var(--chip);border-radius:999px;padding:2px 9px;white-space:nowrap;justify-self:end}
   .it.gold{border-left:3px solid var(--s3);padding-left:5px}
-  .edit{background:var(--paid);border:1px solid var(--bd);border-radius:10px;padding:10px 11px;margin:2px 0 8px}
+  .edit{background:var(--paid);border:1px solid var(--bd);border-radius:14px;padding:11px 12px;margin:2px 0 8px}
   .edit .er{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .edit .er+.er{margin-top:7px}
-  .edit label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+  .edit label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px;font-weight:600}
   .edit input,.edit select{font-size:13px}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
-  input[type=text],input[type=number],select{padding:8px 10px;font-size:13.5px;border:1px solid var(--bd);
-    border-radius:8px;background:var(--page);color:var(--tx);outline:none}
-  button{padding:8px 14px;font-size:13px;font-weight:600;border:1px solid var(--bd);border-radius:8px;
-    background:var(--page);color:var(--tx);cursor:pointer}
-  button.pri{background:var(--s1);color:#fff;border-color:transparent}
+  input[type=text],input[type=number],select{padding:9px 12px;font-size:13.5px;border:1px solid var(--bd);
+    border-radius:12px;background:var(--page);color:var(--tx);outline:none;font-family:inherit}
+  input:focus,select:focus{border-color:var(--s3)}
+  button{padding:9px 16px;font-size:13px;font-weight:700;border:1px solid var(--bd);border-radius:999px;
+    background:var(--surface);color:var(--tx);cursor:pointer;font-family:inherit}
+  button.pri{background:linear-gradient(135deg,var(--s3),var(--s1));color:#fff;border-color:transparent;box-shadow:0 4px 14px var(--glow)}
   button.danger{color:var(--crit)}
   button:hover{opacity:.85}
+  .check{border:1px dashed var(--bd);border-radius:14px;padding:10px 13px;font-size:12px;color:var(--tx2);
+    margin-top:12px;line-height:1.6;font-variant-numeric:tabular-nums}
+  .check b{font-size:12.5px}
   .empty{padding:18px 2px 4px;font-size:13.5px;color:var(--tx2)}
   .empty b{color:var(--tx);font-size:14.5px}
   .empty>div{margin-top:4px}
-  .check{border:1px dashed var(--bd);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--tx2);
-    margin-top:12px;line-height:1.6;font-variant-numeric:tabular-nums}
-  .check b{font-size:12.5px}
   .sn{font-size:11.5px;color:var(--muted);margin-top:10px}
   .hide{display:none}
   table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--grid)}
-  td{padding:5px 4px;border-bottom:1px solid var(--grid)}
-  td input{width:100%;font-size:13px;padding:5px 7px}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--grid);font-weight:800}
+  td{padding:6px 4px;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums}
+  td input{width:100%;font-size:13px;padding:5px 8px}
   td.n input{text-align:right;font-variant-numeric:tabular-nums}
   tr.hrow{cursor:pointer} tr.hrow:hover td{background:var(--paid)}
-  .warn{color:var(--crit);font-weight:600}
-  footer{font-size:11px;color:var(--muted);margin-top:20px;text-align:center}
+  .warn{color:var(--crit);font-weight:700}
+  footer{font-size:11px;color:var(--muted);margin-top:22px;text-align:center;font-weight:600}
 </style>
 </head>
 <body>
@@ -421,9 +429,12 @@ function render(){
   document.getElementById('vLeft').textContent=fmt(total-paid);
   document.getElementById('vFree').textContent=fmt((C.cfg.salary-C.cfg.loan)-total);
   document.getElementById('cFree').textContent='working salary − commitments';
-  var pc=total?Math.round(paid/total*100):0;
-  document.getElementById('pfill').style.width=pc+'%';
-  document.getElementById('pct').textContent=pc+'% done';
+  /* the bar tracks the days of the cycle, not the payments */
+  var MS=86400000, ds=new Date(cd.start), de=new Date(cd.end);
+  var totalD=Math.round((de-ds)/MS)+1;
+  var dayN=live?Math.min(totalD,Math.max(1,Math.round((new Date(today)-ds)/MS)+1)):totalD;
+  document.getElementById('pfill').style.width=(dayN/totalD*100)+'%';
+  document.getElementById('pct').textContent=live?('Day '+dayN+' of '+totalD):(totalD+' days · finished');
 
   /* grouped list */
   var host=document.getElementById('list'); host.innerHTML='';
