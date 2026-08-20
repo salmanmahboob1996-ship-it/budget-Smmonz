@@ -415,12 +415,31 @@ function render(){
   document.getElementById('today').textContent=live?('Today '+human(today)):(MON[cd.em-1]+' '+cd.ey);
 
   var lines=C.lines.slice().sort(function(x,y){ return x.date<y.date?-1:(x.date>y.date?1:0); });
-  var total=0,paid=0,cnt=0;
   PAID={};
   lines.forEach(function(l){
-    total+=+l.v;
     var st=C.paid[l.id];
     PAID[l.id] = (st===undefined) ? (today>=l.date) : !!st;
+  });
+
+  /* money gone from Main beyond the logged extras is spending too — surface it as its own line */
+  if(C.bal.main!=='' && C.bal.main!=null){
+    var dueMain=0, logged=0;
+    lines.forEach(function(l){
+      if(l.a!=='main') return;
+      if(!PAID[l.id]) dueMain+=+l.v;
+      else if(l.src==='x') logged+=+l.v;
+    });
+    var spentMain=(+(C.cfg.personal||0))+(+(C.cfg.buffer||0))+dueMain-(+C.bal.main);
+    var unlogged=Math.round(spentMain-logged);
+    if(unlogged>=1){
+      lines.push({id:'__unlogged', n:'Unlogged spending', g:'Extras', v:unlogged, a:'main', date:today, src:'v', virtual:true});
+      PAID['__unlogged']=true;
+    }
+  }
+
+  var total=0,paid=0,cnt=0;
+  lines.forEach(function(l){
+    total+=+l.v;
     if(PAID[l.id]){ paid+=+l.v; cnt++; }
   });
 
@@ -466,6 +485,16 @@ function render(){
 
 function lineRow(C,l){
   var isPaid=!!PAID[l.id];
+  if(l.virtual){
+    var v=document.createElement('div');
+    v.className='it p'; v.style.cursor='default';
+    v.innerHTML='<span class="st">✓</span>'+
+      '<span class="nm">'+esc(l.n)+'<small>worked out from the Main balance</small></span>'+
+      '<span class="chip">auto</span>'+
+      '<span class="am">'+fmt(l.v)+'</span>'+
+      '<span class="ed"></span>';
+    return v;
+  }
   var r=document.createElement('div');
   r.className='it'+(isPaid?' p':'')+(l.a==='weekly'?' gold':'');
   r.innerHTML='<span class="st">'+(isPaid?'✓':'○')+'</span>'+
@@ -531,39 +560,50 @@ function acctNote(lines,C){
   if(outTarget<0) outTarget=0;
 
   set('adMain', mainTarget, C.bal.main,
-      'Personal '+fmt(personal)+' + buffer '+fmt(buffer)+(due.main?' + '+fmt(due.main)+' due':''));
+      'Personal '+fmt(personal)+' + buffer '+fmt(buffer)+(due.main?' + '+fmt(due.main)+' due':''), true);
   set('adWeek', weeklyTarget, C.bal.weekly, 'Groceries left to spend');
   set('adMonth',monthlyTarget,C.bal.monthly,'Bills left to pay');
   set('adOut',  outTarget,    C.bal.out,    outFixed?'Fixed savings target':'Should be transferred out');
 
-  function set(id,target,actual,label){
+  function set(id,target,actual,label,spendAcct){
     var el=document.getElementById(id); if(!el) return;
     var h='Should have <b>'+fmt(target)+'</b><br><span style="opacity:.75">'+label+'</span>';
     if(actual!=='' && actual!==undefined && actual!==null){
       var diff=Math.round(+actual-target);
       if(Math.abs(diff)<1) h+='<br><span style="color:var(--good)">on target</span>';
       else if(diff>0) h+='<br><span style="color:var(--good)">+'+fmt(diff)+'</span>';
+      else if(spendAcct) h+='<br><span style="color:var(--s4)">'+fmt(-diff)+' spent</span>';
       else h+='<br><span style="color:var(--crit)">'+fmt(-diff)+' short</span>';
     }
     el.innerHTML=h;
   }
   document.getElementById('acctNote').innerHTML='Targets drop as you tick payments.';
 
-  /* live check: what the four boxes should hold together right now vs what you typed in them */
-  var shouldHold=mainTarget+weeklyTarget+monthlyTarget+outTarget;
+  /* live check: the strict accounts must reconcile; Main's gap is explained as spending */
+  var logged=0, unlogged=0;
+  lines.forEach(function(l){
+    if(l.virtual){ unlogged+=+l.v; return; }
+    if(l.src==='x'&&l.a==='main'&&PAID[l.id]) logged+=+l.v;
+  });
+  var hardHold=weeklyTarget+monthlyTarget+outTarget;
   var typed=0, anyTyped=false;
-  ['main','weekly','monthly','out'].forEach(function(k){
+  ['weekly','monthly','out'].forEach(function(k){
     var v=C.bal[k]; if(v!==''&&v!=null){ anyTyped=true; typed+=+v; }
   });
-  var h='Check: the targets above add up to <b>'+fmt(shouldHold)+'</b>.';
+  var h='Check: weekly + monthly + moved out should hold <b>'+fmt(hardHold)+'</b> together.';
   if(anyTyped){
-    var diff=Math.round(typed-shouldHold);
-    h+=' Your balances add up to <b>'+fmt(typed)+'</b> → ';
+    var diff=Math.round(typed-hardHold);
+    h+=' You typed <b>'+fmt(typed)+'</b> → ';
     if(Math.abs(diff)<1) h+='<b style="color:var(--good)">all money accounted for</b>';
     else if(diff>0) h+='<b style="color:var(--good)">+'+fmt(diff)+' more than needed</b>';
-    else h+='<b style="color:var(--crit)">'+fmt(-diff)+' missing</b> — money left the accounts outside the plan';
+    else h+='<b style="color:var(--crit)">'+fmt(-diff)+' missing</b> — money left these accounts outside the plan';
   }else{
-    h+=' Type your real balances above to compare.';
+    h+=' Type the balances above to compare.';
+  }
+  if(C.bal.main!==''&&C.bal.main!=null){
+    var spentM=Math.round(mainTarget-C.bal.main);
+    if(spentM>0) h+='<br>Main: <b>'+fmt(spentM)+'</b> spent from personal + buffer — '+
+      fmt(Math.min(spentM,logged))+' logged'+(unlogged?' + <b>'+fmt(unlogged)+'</b> unlogged (shown in Extras)':'')+'.';
   }
   document.getElementById('moneyCheck').innerHTML=h;
 }
